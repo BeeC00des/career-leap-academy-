@@ -3,7 +3,21 @@ import mongoose from 'mongoose';
 let memoryServer;
 
 export async function connectDB() {
-  let uri = process.env.MONGO_URI;
+  // Tolerate common copy-paste mistakes in dashboard env vars: surrounding spaces/quotes
+  // or the whole "MONGO_URI=..." line pasted as the value.
+  let uri = (process.env.MONGO_URI || '')
+    .trim()
+    .replace(/^MONGO_URI\s*=\s*/, '')
+    .replace(/^["']|["']$/g, '')
+    .trim();
+
+  if (uri && !/^mongodb(\+srv)?:\/\//.test(uri)) {
+    // Never log the value itself — it contains the database password.
+    throw new Error(
+      `MONGO_URI is set but invalid: it must start with "mongodb+srv://" (it starts with "${uri.slice(0, 4)}…", length ${uri.length}). ` +
+        'Re-paste only the connection string in your host\'s environment settings.'
+    );
+  }
 
   if (!uri) {
     if (process.env.NODE_ENV === 'production') {
