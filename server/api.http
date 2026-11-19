@@ -1,0 +1,65 @@
+### CareerLeap API — manual tests
+### Install the VS Code extension "REST Client" (humao.rest-client),
+### then click "Send Request" above each block. Cookies are kept between requests,
+### so after Register/Login the protected /dashboard calls work.
+
+@base = http://localhost:5000/api
+
+### 1. Health check
+GET {{base}}/health
+
+### 2. Register (sets the login cookie)
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "secret123",
+  "track": "data"
+}
+
+### 3. Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "secret123"
+}
+
+### 4. Who am I? (needs login)
+GET {{base}}/auth/me
+
+### 5. Dashboard data (needs login) — copy a task "_id" from the response for step 6
+GET {{base}}/dashboard
+
+### 6. Toggle a task (replace TASK_ID)
+PATCH {{base}}/dashboard/tasks/TASK_ID
+Content-Type: application/json
+
+{ "done": true }
+
+### 7. Log hours
+POST {{base}}/dashboard/hours
+Content-Type: application/json
+
+{ "hours": 3 }
+
+### 8. Forgot password — in dev the response includes "devResetUrl"; copy the token from it
+POST {{base}}/auth/forgot-password
+Content-Type: application/json
+
+{ "email": "test@example.com" }
+
+### 9. Reset password (replace TOKEN)
+POST {{base}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "TOKEN",
+  "password": "newpass456"
+}
+
+### 10. Logout
+POST {{base}}/auth/logout
