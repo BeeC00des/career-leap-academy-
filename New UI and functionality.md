@@ -35,7 +35,7 @@ Vercel forwards `/api/*` to Render ([client/vercel.json](client/vercel.json)), s
    - When asked, fill in `MONGO_URI`, `CLIENT_URL` (your Vercel URL) and the `SMTP_*` values.
    - `JWT_SECRET` is generated automatically.
 3. **Vercel:** create a new project with Root Directory `client`. The framework is detected as Vite.
-   - If your Render URL isn't `https://careerleap-api.onrender.com`, edit the destination in `client/vercel.json`.
+   - If your Render URL isn't `https://careerleap-api-rvc2.onrender.com`, edit the destination in `client/vercel.json`.
 4. Set `CLIENT_URL` on Render to the final Vercel domain. Password-reset emails link to it.
 
 **Notes:**
