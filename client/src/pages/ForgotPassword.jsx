@@ -54,7 +54,7 @@ export default function ForgotPassword() {
         <Alert>{error}</Alert>
         <div className="field">
           <label htmlFor="email">Email address</label>
-          <input id="email" type="email" className="input" placeholder="you@example.com" autoComplete="email"
+          <input id="email" type="email" className="input" placeholder="name@gmail.com" autoComplete="email"
             value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <SubmitButton loading={loading}>Send reset link</SubmitButton>

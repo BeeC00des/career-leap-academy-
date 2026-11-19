@@ -5,6 +5,9 @@ import { Alert, PasswordInput, PasswordMeter, SubmitButton } from '../components
 import { useAuth } from '../context/AuthContext.jsx';
 import { TRACKS } from '../data/content.js';
 
+// Mirrors the server's syntax check (server also verifies the domain can receive mail).
+const EMAIL_RE = /^[a-z0-9](?:[a-z0-9._%+-]{0,62}[a-z0-9])?@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/;
+
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -22,10 +25,13 @@ export default function Register() {
   async function onSubmit(e) {
     e.preventDefault();
     setError('');
+    const email = form.email.trim().toLowerCase();
+    if (!form.name.trim()) return setError('Please enter your name.');
+    if (!EMAIL_RE.test(email) || email.includes('..')) return setError('Enter a valid email address, like name@gmail.com.');
     if (form.password.length < 8) return setError('Password must be at least 8 characters.');
     setLoading(true);
     try {
-      await register({ ...form, name: form.name.trim(), email: form.email.trim() });
+      await register({ ...form, name: form.name.trim(), email });
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -46,7 +52,7 @@ export default function Register() {
         </div>
         <div className="field">
           <label htmlFor="email">Email address</label>
-          <input id="email" type="email" className="input" placeholder="you@example.com" autoComplete="email" value={form.email} onChange={set('email')} required />
+          <input id="email" type="email" className="input" placeholder="name@gmail.com" autoComplete="email" value={form.email} onChange={set('email')} required />
         </div>
         <div className="field">
           <label htmlFor="track">Career track</label>

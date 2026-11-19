@@ -5,11 +5,11 @@ import User, { TRACKS } from '../models/User.js';
 import { COOKIE_NAME, cookieOptions, requireAuth, signToken } from '../middleware/auth.js';
 import { sendResetEmail } from '../utils/email.js';
 import { starterTasks, starterHours } from '../utils/seed.js';
+import { checkSignupEmail, isValidEmailSyntax, normalizeEmail } from '../utils/validateEmail.js';
 
 const router = Router();
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function setSession(res, user) {
   res.cookie(COOKIE_NAME, signToken(user._id), cookieOptions());
@@ -18,18 +18,21 @@ function setSession(res, user) {
 // POST /api/auth/register
 router.post('/register', authLimiter, async (req, res, next) => {
   try {
-    const { name, email, password, track } = req.body || {};
-    if (!name?.trim() || !EMAIL_RE.test(email || '') || (password || '').length < 8) {
-      return res.status(400).json({ message: 'Name, a valid email and a password of 8+ characters are required' });
-    }
+    const { name, password, track } = req.body || {};
+    const email = normalizeEmail(req.body?.email);
+    if (!name?.trim()) return res.status(400).json({ message: 'Please enter your name' });
+    if ((password || '').length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters' });
     if (track && !TRACKS[track]) return res.status(400).json({ message: 'Unknown career track' });
 
-    const exists = await User.exists({ email: email.toLowerCase() });
+    const emailError = await checkSignupEmail(email);
+    if (emailError) return res.status(400).json({ message: emailError });
+
+    const exists = await User.exists({ email });
     if (exists) return res.status(409).json({ message: 'An account with this email already exists' });
 
     const t = track || 'data';
     const user = await User.create({
-      name, email, password, track: t,
+      name: name.trim(), email, password, track: t,
       cohortStart: new Date(Date.now() - 5 * 7 * 24 * 60 * 60 * 1000), // demo: 5 weeks into the cohort
       tasks: starterTasks(t),
       weeklyHours: starterHours(),
@@ -42,8 +45,9 @@ router.post('/register', authLimiter, async (req, res, next) => {
 // POST /api/auth/login
 router.post('/login', authLimiter, async (req, res, next) => {
   try {
-    const { email, password } = req.body || {};
-    const user = await User.findOne({ email: (email || '').toLowerCase() }).select('+password');
+    const email = normalizeEmail(req.body?.email);
+    const { password } = req.body || {};
+    const user = await User.findOne({ email }).select('+password');
     if (!user || !(await user.comparePassword(password || ''))) {
       return res.status(401).json({ message: 'Incorrect email or password' });
     }
@@ -66,9 +70,9 @@ router.get('/me', requireAuth, (req, res) => {
 // POST /api/auth/forgot-password
 router.post('/forgot-password', authLimiter, async (req, res, next) => {
   try {
-    const email = (req.body?.email || '').toLowerCase();
+    const email = normalizeEmail(req.body?.email);
     const generic = { message: 'If an account exists for that email, a reset link has been sent.' };
-    if (!EMAIL_RE.test(email)) return res.status(400).json({ message: 'Enter a valid email address' });
+    if (!isValidEmailSyntax(email)) return res.status(400).json({ message: 'Enter a valid email address' });
 
     const user = await User.findOne({ email });
     if (!user) return res.json(generic); // never reveal whether the email exists

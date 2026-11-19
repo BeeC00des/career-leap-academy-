@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
   "name": "Test User",
-  "email": "test@example.com",
+  "email": "test@career-leap.academy",
   "password": "secret123",
   "track": "data"
 }
@@ -24,7 +24,7 @@ POST {{base}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "test@example.com",
+  "email": "test@career-leap.academy",
   "password": "secret123"
 }
 
@@ -50,7 +50,7 @@ Content-Type: application/json
 POST {{base}}/auth/forgot-password
 Content-Type: application/json
 
-{ "email": "test@example.com" }
+{ "email": "test@career-leap.academy" }
 
 ### 9. Reset password (replace TOKEN)
 POST {{base}}/auth/reset-password
